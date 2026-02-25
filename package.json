@@ -1,0 +1,70 @@
+{
+  "name": "@gbyte.tech/langgraph-checkpoint-scylladb",
+  "version": "1.0.0",
+  "description": "ScyllaDB checkpoint saver for LangGraph.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/GByteTech/langgraph-checkpoint-scylladb-js.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist/",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:int": "vitest run --mode int",
+    "lint": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "langgraph",
+    "checkpoint",
+    "scylladb",
+    "cassandra",
+    "langchain"
+  ],
+  "author": "GByte.Tech",
+  "license": "MIT",
+  "dependencies": {
+    "cassandra-driver": "^4.7.2"
+  },
+  "peerDependencies": {
+    "@langchain/core": ">=0.3.0",
+    "@langchain/langgraph-checkpoint": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/langgraph-checkpoint": "^0.1.0",
+    "@langchain/langgraph-checkpoint-validation": "^0.0.1",
+    "@types/node": "^20",
+    "@vitest/coverage-v8": "^3.2.4",
+    "prettier": "^3.0.0",
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "input": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/"
+  ],
+  "packageManager": "pnpm@10.30.0"
+}

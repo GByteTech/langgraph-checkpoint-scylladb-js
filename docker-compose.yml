@@ -1,0 +1,30 @@
+services:
+  scylla:
+    image: scylladb/scylla:2025.3.7
+    restart: "no"
+    container_name: node1
+    ports:
+      - "9042:9042" # CQL port
+    command: --smp 1 --developer-mode 1
+    volumes:
+      - scylla_data:/var/lib/scylla/data
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'SELECT now() FROM system.local'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Initialize ScyllaDB schema
+  scylla-init:
+    image: scylladb/scylla:2025.3.7
+    depends_on:
+      scylla:
+        condition: service_healthy
+    volumes:
+      - ./docker/scylla-init.cql:/scylla-init.cql:ro
+    entrypoint: ["cqlsh", "scylla", "-f", "/scylla-init.cql"]
+    restart: "no"
+
+volumes:
+  scylla_data:

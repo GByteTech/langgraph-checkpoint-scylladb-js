@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    services:
+      scylla:
+        image: scylladb/scylla:2025.3.7
+        ports:
+          - 9042:9042
+        options: >-
+          --health-cmd "cqlsh -e 'SELECT now() FROM system.local'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+          --health-start-period 60s
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply CQL schema
+        run: |
+          pip install cqlsh
+          cqlsh localhost 9042 -f docker/scylla-init.cql
+
+      - name: Run tests
+        run: pnpm test -- --coverage
+        env:
+          SCYLLA_HOST: localhost
+
+      - name: Upload coverage
+        if: matrix.node-version == 20
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Verify dist
+        run: |
+          test -f dist/index.js || (echo "dist/index.js missing" && exit 1)
+          test -f dist/index.d.ts || (echo "dist/index.d.ts missing" && exit 1)
+          echo "✅ Build artifacts verified"
+
+  publish:
+    name: Publish to npm
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org/
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Publish (dry run on non-release)
+        run: pnpm publish --dry-run --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
