@@ -1,15 +1,15 @@
 import { beforeAll, afterAll } from "vitest";
 import { specTest } from "@langchain/langgraph-checkpoint-validation";
-import cassandra from "cassandra-driver";
+import ScylladbDriver from "scylladb-driver-alpha";
 import { ScyllaDBSaver } from "../index.js";
 
-const { Client } = cassandra;
+const { Client } = ScylladbDriver;
 
 const CONTACT_POINTS = [process.env.SCYLLA_HOST ?? "localhost"];
 const KEYSPACE = "langgraph_spec";
 const LOCAL_DC = "datacenter1";
 
-let sharedClient: cassandra.Client;
+let sharedClient: ScylladbDriver.Client;
 
 specTest({
   checkpointerName: "ScyllaDBSaver",

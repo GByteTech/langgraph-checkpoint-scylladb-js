@@ -57,7 +57,7 @@ feat: add TTL refresh on read
 fix: handle null checkpoint_ns in list
 docs: update API reference
 test: add namespace isolation tests
-chore: bump cassandra-driver to 4.8
+chore: bump scylladb-driver-alpha to 0.3
 ```
 
 ## Code Style

@@ -33,7 +33,7 @@
   "author": "GByte.Tech",
   "license": "MIT",
   "dependencies": {
-    "cassandra-driver": "^4.7.2"
+    "scylladb-driver-alpha": "^0.3.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0",
