@@ -60,7 +60,7 @@ const saver = await ScyllaDBSaver.fromConfig({
 });
 
 // Option 3: BYO client (advanced)
-import { Client } from "cassandra-driver";
+import { Client } from "scylladb-driver-alpha";
 
 const client = new Client({
   contactPoints: ["localhost"],

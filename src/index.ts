@@ -11,12 +11,12 @@ import {
   uuid6,
 } from "@langchain/langgraph-checkpoint";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import cassandra from "cassandra-driver";
+import ScylladbDriver from "scylladb-driver-alpha";
 
-const { Client, types, mapping } = cassandra;
+const { Client, types, mapping } = ScylladbDriver;
 
 // Re-export for convenience
-export type CassandraClient = cassandra.Client;
+export type ScylladbClient = ScylladbDriver.Client;
 
 /**
  * TTL configuration for automatic data expiration.
@@ -214,7 +214,7 @@ function getSetupCQL(keyspace: string): string[] {
  * - LeveledCompactionStrategy for read-optimized workloads
  */
 export class ScyllaDBSaver extends BaseCheckpointSaver {
-  private client: CassandraClient;
+  private client: ScylladbClient;
   private ttlConfig?: TTLConfig;
   private keyspace: string;
   private contactPoints: string[];
@@ -222,7 +222,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
   private credentials?: { username: string; password: string };
 
   constructor(
-    client: CassandraClient,
+    client: ScylladbClient,
     config?: {
       ttlConfig?: TTLConfig;
       keyspace?: string;
@@ -249,7 +249,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
     options?: { setupSchema?: boolean },
   ): Promise<ScyllaDBSaver> {
     const keyspace = config.keyspace ?? "langgraph";
-    const clientConfig: cassandra.ClientOptions = {
+    const clientConfig: ScylladbDriver.ClientOptions = {
       contactPoints: config.contactPoints,
       localDataCenter: config.localDataCenter,
       keyspace,
@@ -305,7 +305,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
    */
   async setup(): Promise<void> {
     // Need a client without keyspace to create the keyspace itself
-    const setupClientConfig: cassandra.ClientOptions = {
+    const setupClientConfig: ScylladbDriver.ClientOptions = {
       contactPoints: this.contactPoints,
       localDataCenter: this.localDataCenter,
     };
@@ -338,7 +338,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
       return undefined;
     }
 
-    let row: cassandra.types.Row | null = null;
+    let row: ScylladbDriver.types.Row | null = null;
 
     if (checkpointId) {
       const result = await this.client.execute(
@@ -452,7 +452,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
     const beforeConfig = options?.before;
     const beforeCheckpointId = beforeConfig?.configurable?.checkpoint_id;
 
-    let allRows: cassandra.types.Row[] = [];
+    let allRows: ScylladbDriver.types.Row[] = [];
 
     if (threadId && checkpointNs !== undefined) {
       // Case 1: Both thread_id and checkpoint_ns specified — efficient partition query
@@ -667,7 +667,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
   // ===========================================================================
 
   private async rowToCheckpointTuple(
-    row: cassandra.types.Row,
+    row: ScylladbDriver.types.Row,
   ): Promise<CheckpointTuple> {
     const threadId = row["thread_id"] as string;
     const checkpointNs = row["checkpoint_ns"] as string;
@@ -751,7 +751,7 @@ export class ScyllaDBSaver extends BaseCheckpointSaver {
   }
 
   private matchesFilter(
-    row: cassandra.types.Row,
+    row: ScylladbDriver.types.Row,
     filter: Record<string, unknown>,
   ): boolean {
     // First try to match against denormalized columns (source, step)

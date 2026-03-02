@@ -16,10 +16,10 @@ import {
   uuid6,
 } from "@langchain/langgraph-checkpoint";
 import { RunnableConfig } from "@langchain/core/runnables";
-import cassandra from "cassandra-driver";
+import ScylladbDriver from "scylladb-driver-alpha";
 import { ScyllaDBSaver } from "../index.js";
 
-const { Client } = cassandra;
+const { Client } = ScylladbDriver;
 
 // =============================================================================
 // Integration tests running against ScyllaDB via docker-compose
@@ -31,7 +31,7 @@ const KEYSPACE = "langgraph_test";
 const LOCAL_DC = "datacenter1";
 
 describe("ScyllaDBSaver Integration Tests", () => {
-  let client: cassandra.Client;
+  let client: ScylladbDriver.Client;
   let saver: ScyllaDBSaver;
 
   beforeAll(async () => {
